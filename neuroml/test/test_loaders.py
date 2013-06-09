@@ -14,7 +14,10 @@ except ImportError:
 
 class TestNeuroMLLoader(unittest.TestCase):
     def test_load_neuroml(self):
-        path =  neuroml.__path__
-        test_file_path=os.path.join(path,'Purk2M9s.nml')
+        path =  neuroml.__path__[0]
+        path =  os.path.join(path,'test')
+        test_file_path = os.path.join(path,'Purk2M9s.nml')
         doc = loaders.NeuroMLLoader.load(test_file_path)
+        print doc
+
         self.assertEqual(doc.id,'Purk2M9s')
