@@ -2,8 +2,13 @@
 Examples
 ========
 
+The examples in this section are intended to give in depth overviews of how to accomplish 
+specific tasks with libNeuroML.
+
 These examples are located in the neuroml/examples directory and can
 be tested to confirm they work by running the run_all.py script.
+
+.. contents:: Examples
 
 Making a NeuroML morphology
 ---------------------------
@@ -40,6 +45,16 @@ Synapses
 --------
 
 .. literalinclude:: ../neuroml/examples/write_syns.py
+
+Working with JSON serialization
+------------------------
+
+One thing to note is that the JSONWriter, unlike NeuroMLWriter, will
+serializing using array-based (Arraymorph) representation if this has
+been used.
+
+.. literalinclude:: ../neuroml/examples/json_serialization.py
+
 
 Working with arraymorphs
 ------------------------

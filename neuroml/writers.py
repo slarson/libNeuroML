@@ -1,7 +1,7 @@
 import neuroml
 import numpy as np
 import tables
-
+from jsonpickle import encode as json_encode
 
 class NeuroMLWriter(object):
     @classmethod
@@ -24,6 +24,79 @@ class NeuroMLWriter(object):
 
         nmldoc.export(file,0,name_="neuroml",
                       namespacedef_=namespacedef) #name_ param to ensure root element named correctly - generateDS limitation
+
+class JSONWriter(object):
+    """
+    Write a NeuroMLDocument to JSON, particularly useful
+    when dealing with lots of ArrayMorphs.
+    """
+
+    @classmethod
+    def __encode_as_json(cls,neuroml_document):
+        neuroml_document = cls.__sanitize_doc(neuroml_document)
+        encoded = json_encode(neuroml_document)
+        return encoded
+    
+    @classmethod
+    def __sanitize_doc(cls,neuroml_document):
+        """
+        Some operations will need to be performed
+        before the document is JSON-pickleable.
+        """
+
+        for cell in neuroml_document.cells:
+            try:
+                cell.morphology.vertices = cell.morphology.vertices.tolist()
+                cell.morphology.physical_mask = cell.morphology.physical_mask.tolist()
+                cell.morphology.connectivity = cell.morphology.connectivity.tolist()
+            except:
+                pass
+
+        return neuroml_document
+
+    @classmethod
+    def __file_handle(file):
+        if isinstance(cls,file,str):
+            fileh = tables.openFile(filepath, mode = "w")
+
+            
+    @classmethod    
+    def write(cls,neuroml_document,file):
+        if isinstance(file,str):
+            fileh = open(file, mode = 'w')
+        else:
+            fileh = file
+
+        if isinstance(neuroml_document,neuroml.NeuroMLDocument):
+            encoded = cls.__encode_as_json(neuroml_document)
+
+        else:
+            raise NotImplementedError("Currently you can only serialize NeuroMLDocument type in JSON format")
+
+        fileh.write(encoded)
+
+    @classmethod
+    def write_to_mongodb(cls,neuroml_document,db,host=None,port=None,id=None):
+        from pymongo import MongoClient
+        import json
+
+        if id == None:
+            id = neuroml_document.id
+        
+        if host == None:
+            host = 'localhost'
+        if port == None:
+            port = 27017
+
+        client = MongoClient(host, port)
+        db = client[db]
+        collection = db[id]
+
+        if isinstance(neuroml_document,neuroml.NeuroMLDocument):
+            encoded = cls.__encode_as_json(neuroml_document)
+
+        encoded_dict = json.loads(encoded)
+        collection.insert(encoded_dict)
 
 class ArrayMorphWriter(object):
     """
@@ -90,11 +163,9 @@ class ArrayMorphWriter(object):
         #hierarchy - this kind of tree traversal should be done recursively
 
         if isinstance(data,neuroml.arraymorph.ArrayMorphology):
-            print "writing array morphology"
             cls.__write_single_cell(data, fileh)
 
         if isinstance(data,neuroml.NeuroMLDocument):
-            print "writing neuroml document"
             cls.__write_neuroml_document(data,fileh)
             
         # Finally, close the file (this also will flush all the remaining buffers!)

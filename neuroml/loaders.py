@@ -2,6 +2,8 @@ import numpy as np
 from nml.nml import parse as nmlparse
 from neuroml import arraymorph
 import neuroml
+from jsonpickle import decode as json_decode
+import neuroml
 
 class NeuroMLLoader(object):
 
@@ -72,6 +74,50 @@ class SWCLoader(object):
                        connectivity=connection_indices, 
                        name=name )
 
+class JSONLoader(object):
+
+    @classmethod
+    def load(cls,file):
+        if isinstance(file,str):
+            fileh = open(file,'r')
+        else:
+            fileh = file
+
+        json_string = fileh.read()
+        unpickled = json_decode(json_string)
+        return unpickled
+        
+    @classmethod
+    def load_from_mongodb(cls,
+                          db,
+                          id,
+                          host=None,
+                          port=None):
+        
+        from pymongo import MongoClient
+        import simplejson as json
+        
+        if host == None:
+            host = 'localhost'
+        if port == None:
+            port = 27017
+
+        client = MongoClient(host,port)
+
+        db = client[db]
+
+        collection = db[id]
+
+        doc = collection.find_one()
+
+        del doc['_id']         
+
+        doc = json.dumps(doc)
+
+        document = json_decode(doc)
+
+        return document
+        
 class ArrayMorphLoader(object):
 
     @classmethod
@@ -96,7 +142,6 @@ class ArrayMorphLoader(object):
 
         for node in file.root:
             if hasattr(node,'vertices'):
-                print "found vertices attribute..must be a morphology"
                 loaded_morphology = cls.__extract_morphology(node)
                 document.morphology.append(loaded_morphology)
             else:
@@ -104,6 +149,6 @@ class ArrayMorphLoader(object):
                     loaded_morphology = cls.__extract_morphology(morphology)
                     document.morphology.append(loaded_morphology)
                 
-
         return document
             
+    
