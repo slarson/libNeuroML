@@ -6,6 +6,7 @@ import lxml
 from lxml import objectify
 import re
 from config import variables
+import csv
 
 def remove_curlies(string):
     return re.sub("{.*}","",string)
@@ -63,7 +64,6 @@ def _node_to_python(node):
             renamed_attribute = to_lowercase_with_underscores(nml_attribute)
             if pluralize_flag:
                 renamed_attribute = pluralize(renamed_attribute)
-
             NameTable[nml_attribute] = renamed_attribute
 
 filename = variables['schema_name']
@@ -93,6 +93,10 @@ NameTable['ionChannelHH'] = 'ion_channel_hh'
 NameTable['gateHHrates']  = 'gate_hh_rates'
 NameTable['gateHHtauInf'] = 'gate_hh_tau_infs'
 
+NameTable['ionChannel'] = 'ion_channel'
+NameTable['ionChannelHH'] = 'ion_channel_hhs'
+
+
 
 NameTable['basePyNNCell'] = 'basePyNNCell'
 NameTable['basePyNNIaFCell'] = 'basePyNNIaFCell'
@@ -113,5 +117,21 @@ NameTable['IF_curr_exp'] = 'IF_curr_exp'
 NameTable['IF_cond_alpha'] = 'IF_cond_alpha'
 NameTable['IF_cond_exp'] = 'IF_cond_exp'
 
+NameTable['extracellularProperties'] = 'extracellular_properties'
+NameTable['intracellularProperties'] = 'intracellular_properties'
+NameTable['biophysicalProperties'] = 'biophysical_properties'
+
 print("NameTable is as follows:")
-print NameTable
+print(NameTable)
+
+print("Saving NameTable to csv file")
+writer = csv.writer(open('name_table.csv', 'wb'))
+for key, value in NameTable.items():
+   writer.writerow([key, value])
+
+print ("Saving name changes table to csv file")
+changes_writer = csv.writer(open('changed_names.csv','wb'))
+for key in NameTable:
+    value = NameTable[key]
+    if key != value:
+        changes_writer.writerow([key,value])

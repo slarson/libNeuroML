@@ -4,9 +4,10 @@ Generating a Hodgkin-Huxley Ion Channel and writing it to NeuroML
 
 import neuroml
 import neuroml.writers as writers
+from lxml import etree
+from urllib import urlopen
 
-chan = neuroml.IonChannel(id='na',
-                          type='ionChannelHH',
+chan = neuroml.IonChannelHH(id='na',
                           conductance='10pS',
                           species='na',
                           notes="This is an example voltage-gated Na channel")
@@ -38,19 +39,18 @@ chan.gates.append(m_gate)
 chan.gates.append(h_gate)
 
 doc = neuroml.NeuroMLDocument()
-doc.ion_channels.append(chan)
+doc.ion_channel_hhs.append(chan)
 
 doc.id = "ChannelMLDemo"
 
-newnmlfile = './tmp/channelMLtest.xml'
-writers.NeuroMLWriter.write(doc,newnmlfile)
+nml_file = './tmp/channelMLtest.xml'
+writers.NeuroMLWriter.write(doc,nml_file)
 
-print("Written channel file to: "+newnmlfile)
+print("Written channel file to: "+nml_file)
 
-from lxml import etree
-from urllib import urlopen
-schema_file = urlopen("../../../NeuroML2/Schemas/NeuroML2/NeuroML_v2beta.xsd")
-xmlschema = etree.XMLSchema(etree.parse(schema_file))
-print "Validating %s against %s" %(newnmlfile, schema_file.geturl())
-xmlschema.assertValid(etree.parse(newnmlfile))
-print "It's valid!"
+
+###### Validate the NeuroML ######    
+
+from neuroml.utils import validate_neuroml2
+
+validate_neuroml2(nml_file)
